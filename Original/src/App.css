@@ -1,0 +1,32 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    font-family: Arial, sans-serif;
+  }
+  
+  .maze {
+    display: inline-block;
+  }
+  
+  .cell {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .scoreboard {
+    color: white;
+    text-align: center;
+    margin: 10px;
+  }
+  
+  .gameover-screen, .win-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: black;
+    color: white;
+  }
+  

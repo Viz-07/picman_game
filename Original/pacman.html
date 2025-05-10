@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Pic-Man</title>
+  <style>
+    canvas {
+      background: black;
+      display: block;
+      margin: 0 auto;
+      image-rendering: pixelated;
+    }
+    body {
+      text-align: center;
+      font-family: 'Press Start 2P', cursive;
+      background-color: #000;
+      color: yellow;
+    }
+    #hud {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <h1>PIC-MAN</h1>
+  <div id="hud">Score: 0 | Lives: 3</div>
+  <canvas id="gameCanvas" width="560" height="620"></canvas>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const hud = document.getElementById('hud');
+
+    const tileSize = 20;
+    const CENTER = tileSize / 2;
+
+    const rawMap = [
+      "####################",
+      "#........##........#",
+      "#.####.#.##.#.####.#",
+      "#.#  #.#.##.#.#  #.#",
+      "#.####.#.##.#.####.#",
+      "#..................#",
+      "#.####.######.####.#",
+      "#......# GG #......#",
+      "######.# GG #.######",
+      "     #.# GG #.#     ",
+      "######.# GG #.######",
+      "#........##........#",
+      "#.####.######.####.#",
+      "#.#  #.#.##.#.#  #.#",
+      "#.####.#.##.#.####.#",
+      "#..................#",
+      "####################",
+    ];
+
+    let map = rawMap.map(row => row.split(''));
+
+    let pacman = { x: 9, y: 15, dir: { x: 0, y: 0 } };
+    let score = 0;
+    let lives = 3;
+    let gameOver = false;
+
+    let ghosts = [
+      { x: 9, y: 7, dir: { x: 0, y: -1 }, color: 'red' },
+      { x: 10, y: 7, dir: { x: 0, y: 1 }, color: 'cyan' },
+    ];
+
+    function drawTile(x, y, type) {
+      if (type === '#') {
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+      } else if (type === '.') {
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(x * tileSize + CENTER, y * tileSize + CENTER, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawPacman() {
+      ctx.fillStyle = 'yellow';
+      ctx.beginPath();
+      let startAngle = 0.25 * Math.PI;
+      let endAngle = 1.75 * Math.PI;
+
+      if (pacman.dir.x === -1) {
+        startAngle = 1.25 * Math.PI;
+        endAngle = 0.75 * Math.PI;
+      } else if (pacman.dir.y === -1) {
+        startAngle = 1.75 * Math.PI;
+        endAngle = 1.25 * Math.PI;
+      } else if (pacman.dir.y === 1) {
+        startAngle = 0.75 * Math.PI;
+        endAngle = 0.25 * Math.PI;
+      }
+
+      ctx.arc(pacman.x * tileSize + CENTER, pacman.y * tileSize + CENTER, 10, startAngle, endAngle);
+      ctx.lineTo(pacman.x * tileSize + CENTER, pacman.y * tileSize + CENTER);
+      ctx.fill();
+    }
+
+    function drawGhost(ghost) {
+      ctx.fillStyle = ghost.color;
+      ctx.beginPath();
+      ctx.arc(ghost.x * tileSize + CENTER, ghost.y * tileSize + CENTER, 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function moveGhosts() {
+      for (let ghost of ghosts) {
+        const nextX = ghost.x + ghost.dir.x;
+        const nextY = ghost.y + ghost.dir.y;
+        let isChaser = ghost.color === 'red';
+
+        if (map[nextY][nextX] === '#' || Math.random() < 0.1 || isChaser) {
+          let options = [];
+          for (let d of [{x:0,y:1}, {x:0,y:-1}, {x:1,y:0}, {x:-1,y:0}]) {
+            let nx = ghost.x + d.x;
+            let ny = ghost.y + d.y;
+            if (map[ny][nx] !== '#') {
+              let dist = Math.hypot(nx - pacman.x, ny - pacman.y);
+              options.push({dir: d, dist});
+            }
+          }
+          if (options.length) {
+            if (isChaser) {
+              options.sort((a, b) => a.dist - b.dist);
+            } else {
+              options.sort(() => Math.random() - 0.5);
+            }
+            ghost.dir = options[0].dir;
+          }
+        }
+        ghost.x += ghost.dir.x;
+        ghost.y += ghost.dir.y;
+      }
+    }
+
+    function checkCollision() {
+      for (let ghost of ghosts) {
+        if (ghost.x === pacman.x && ghost.y === pacman.y) {
+          lives--;
+          pacman.x = 9;
+          pacman.y = 15;
+          pacman.dir = { x: 0, y: 0 };
+          if (lives <= 0) {
+            gameOver = true;
+            clearInterval(loopId);
+            setTimeout(() => {
+              ctx.fillStyle = 'black';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.fillStyle = 'red';
+              ctx.font = '20px "Press Start 2P"';
+              ctx.fillText("GAME OVER", 120, 300);
+              ctx.fillText(`Score: ${score}`, 140, 340);
+              ctx.fillText("Press R to Restart", 50, 380);
+            }, 200);
+          }
+        }
+      }
+    }
+
+    function movePacman() {
+      const nextX = pacman.x + pacman.dir.x;
+      const nextY = pacman.y + pacman.dir.y;
+
+      if (map[nextY] && map[nextY][nextX] !== '#') {
+        pacman.x = nextX;
+        pacman.y = nextY;
+
+        // Tunnel wrap
+        if (pacman.x < 0) pacman.x = map[0].length - 1;
+        if (pacman.x >= map[0].length) pacman.x = 0;
+
+        if (map[nextY][nextX] === '.') {
+          score += 10;
+          map[nextY][nextX] = ' ';
+        }
+      }
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
+          drawTile(x, y, map[y][x]);
+        }
+      }
+
+      drawPacman();
+      for (let ghost of ghosts) drawGhost(ghost);
+      movePacman();
+      moveGhosts();
+      checkCollision();
+
+      hud.innerText = `Score: ${score} | Lives: ${lives}`;
+    }
+
+    const loopId = setInterval(gameLoop, 200);
+
+    document.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'ArrowUp': pacman.dir = { x: 0, y: -1 }; break;
+        case 'ArrowDown': pacman.dir = { x: 0, y: 1 }; break;
+        case 'ArrowLeft': pacman.dir = { x: -1, y: 0 }; break;
+        case 'ArrowRight': pacman.dir = { x: 1, y: 0 }; break;
+        case ' ': pacman.dir = { x: 0, y: 0 }; break;
+        case 'r':
+        case 'R':
+          if (gameOver) location.reload();
+          break;
+      }
+    });
+
+    // Gamepad Support
+    function checkGamepad() {
+      const gp = navigator.getGamepads()[0];
+      if (!gp) return;
+
+      const axisThreshold = 0.5;
+      if (gp.axes[1] < -axisThreshold) pacman.dir = { x: 0, y: -1 };
+      else if (gp.axes[1] > axisThreshold) pacman.dir = { x: 0, y: 1 };
+      else if (gp.axes[0] < -axisThreshold) pacman.dir = { x: -1, y: 0 };
+      else if (gp.axes[0] > axisThreshold) pacman.dir = { x: 1, y: 0 };
+
+      requestAnimationFrame(checkGamepad);
+    }
+
+    window.addEventListener("gamepadconnected", function(e) {
+      console.log("Gamepad connected:", e.gamepad);
+      requestAnimationFrame(checkGamepad);
+    });
+
+    window.addEventListener("load", () => {
+      if (navigator.getGamepads()[0]) {
+        requestAnimationFrame(checkGamepad);
+      }
+    });
+  </script>
+</body>
+</html>
