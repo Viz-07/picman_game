@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pic-Man Intro</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Press Start 2P', cursive;
+      cursor: pointer;
+    }
+    .container {
+      position: relative;
+      width: max-content;
+    }
+    .poster {
+      max-width: 500px;
+      width: 90%;
+      display: block;
+    }
+    .start-btn {
+      position: absolute;
+      left: 47%;
+      top: 85%;
+      transform: translate(-50%, -50%);
+      background: yellow;
+      white-space: nowrap;
+      color: black;
+      font-family: 'Press Start 2P', cursive;
+      border: none;
+      padding: 25px 50px;
+      font-size: 21px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 20px yellow;
+      transition: transform 0.2s ease;
+    }
+    .start-btn:hover {
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Background Music -->
+  <audio id="bgMusic" loop autoplay>
+    <source src="sounds/gameWin.wav" type="audio/wav">
+    Your browser does not support the audio element.
+  </audio>
+
+  <div class="container">
+    <img src="images/poster.gif" alt="Pic-Man Poster" class="poster"> 
+    <button class="start-btn" onclick="startGame()">START GAME</button>
+  </div>
+
+  <script>
+    const music = document.getElementById("bgMusic");
+    music.volume = 0.5;
+    
+    function initAudio() {
+      const playPromise = music.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log("Autoplay prevented - waiting for user interaction");
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(initAudio, 300);
+    });
+
+    document.addEventListener('click', () => {
+      initAudio();
+    }, { once: true });
+
+    function startGame() {
+      localStorage.setItem('musicTime', music.currentTime);
+      window.location.href = "game.html";
+    }
+  </script>
+
+</body>
+</html>
