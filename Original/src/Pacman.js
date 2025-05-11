@@ -69,28 +69,44 @@ export default class Pacman {
     //   this.tileSize,
     //   this.tileSize
     // );
+    
   }
 
   #loadPacmanImages() {
+    const pacmanImage0 = new Image();
+    pacmanImage0.src = "images/pacman_frame_0.png";
+
     const pacmanImage1 = new Image();
-    pacmanImage1.src = "images/pac0.png";
+    pacmanImage1.src = "images/pacman_frame_1.png";
 
     const pacmanImage2 = new Image();
-    pacmanImage2.src = "images/pac1.png";
+    pacmanImage2.src = "images/pacman_frame_2.png";
 
     const pacmanImage3 = new Image();
-    pacmanImage3.src = "images/pac2.png";
+    pacmanImage3.src = "images/pacman_frame_3.png";
 
     const pacmanImage4 = new Image();
-    pacmanImage4.src = "images/pac1.png";
+    pacmanImage4.src = "images/pacman_frame_4.png";
+
+    const pacmanImage5 = new Image();
+    pacmanImage5.src = "images/pacman_frame_5.png";
+
+    const pacmanImage6 = new Image();
+    pacmanImage6.src = "images/pacman_frame_6.png";
+
+    const pacmanImage7 = new Image();
+    pacmanImage7.src = "images/pacman_frame_7.png";
 
     this.pacmanImages = [
+      pacmanImage0,
       pacmanImage1,
       pacmanImage2,
       pacmanImage3,
       pacmanImage4,
+      pacmanImage5,
+      pacmanImage6,
+      pacmanImage7,
     ];
-
     this.pacmanImageIndex = 0;
   }
 
@@ -194,6 +210,7 @@ export default class Pacman {
 
   #eatDot() {
     if (this.tileMap.eatDot(this.x, this.y) && this.madeFirstMove) {
+      this.wakaSound.volume = 0.8;
       this.wakaSound.play();
     }
   }
