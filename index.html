@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>Pic-Man</title>
+    <style>
+      #gameCanvas {
+        box-shadow: 20px 18px 10px rgb(109, 36, 36);
+      }
+      h1 {
+        margin: 0;
+        padding: 0.5em 0;
+        text-align: center;
+        font-family: 'Press Start 2P', fantasy;
+        font-size: 40px;
+        color: #FFD700;
+        text-shadow: 2px 2px #00ff80, -2px -2px #0000FF;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        overflow: hidden;
+        height: 150vh;
+        background: linear-gradient(
+          30deg,
+          rgb(175, 225, 10) 0%,
+          rgb(244, 89, 33) 60%,
+          rgb(176, 28, 28) 100%
+        );
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>Pic-Man</h1>
+      <canvas id="gameCanvas"></canvas>
+    </div>
+    <script src="/src/Game.js" type="module"></script>
+  </body>
+</html>
