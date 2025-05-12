@@ -1,7 +1,8 @@
 import MovingDirection from "./MovingDirection.js";
 
 export default class Enemy {
-  constructor(x, y, tileSize, velocity, tileMap) {
+  constructor(x, y, tileSize, velocity, tileMap, name = "pinky") {
+    this.color = name
     this.x = x;
     this.y = y;
     this.tileSize = tileSize;
@@ -169,7 +170,16 @@ export default class Enemy {
 
   #loadImages() {
     this.normalGhost = new Image();
-    this.normalGhost.src = "images/ghost.png";
+
+    if (this.color === "pinky") {
+      this.normalGhost.src = "images/pinky.png";
+    } else if (this.color === "inky") {
+      this.normalGhost.src = "images/inky.png";
+    } else if (this.color === "clyde") {
+      this.normalGhost.src = "images/clyde.png";
+    } else {
+      this.normalGhost.src = "images/pinky.png"; // fallback
+    }
 
     this.scaredGhost = new Image();
     this.scaredGhost.src = "images/scaredGhost.png";
