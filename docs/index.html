@@ -12,7 +12,7 @@
       align-items: center;
       height: 100vh;
       font-family: 'Press Start 2P', cursive;
-      cursor: pointer;
+      cursor: pointer; /* Indicates the page is interactive */
     }
     .container {
       position: relative;
@@ -26,7 +26,7 @@
     .start-btn {
       position: absolute;
       left: 47%;
-      top: 85%;
+      top: 85%; 
       transform: translate(-50%, -50%);
       background: yellow;
       white-space: nowrap;
@@ -47,15 +47,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-
-  <!-- Background Music -->
+  <!-- Audio element - ensure the path is correct -->
   <audio id="bgMusic" loop autoplay>
     <source src="sounds/gameWin.wav" type="audio/wav">
     Your browser does not support the audio element.
   </audio>
 
   <div class="container">
-    <img src="images/poster.gif" alt="Pic-Man Poster" class="poster"> 
+    <img id="poster" src="images/posterOFFupdated.gif" alt="Pic-Man Poster" class="poster"> 
     <button class="start-btn" onclick="startGame()">START GAME</button>
   </div>
 
@@ -64,7 +63,12 @@
     music.volume = 0.5;
     
     function initAudio() {
+      // Set volume first
+      music.volume = 0.5;
+      
+      // Try to play
       const playPromise = music.play();
+      
       if (playPromise !== undefined) {
         playPromise.catch(error => {
           console.log("Autoplay prevented - waiting for user interaction");
@@ -75,7 +79,6 @@
     document.addEventListener('DOMContentLoaded', () => {
       setTimeout(initAudio, 300);
     });
-
     document.addEventListener('click', () => {
       initAudio();
     }, { once: true });
@@ -84,7 +87,15 @@
       localStorage.setItem('musicTime', music.currentTime);
       window.location.href = "game.html";
     }
-  </script>
+    let ghostModeOn = true;
 
+const poster = document.getElementById("poster");
+poster.addEventListener("click", () => {
+  ghostModeOn = !ghostModeOn;
+  poster.src = ghostModeOn ? "images/posterONupdated.gif" : "images/posterOFFupdated.gif";
+
+});
+
+  </script>
 </body>
 </html>
