@@ -59,7 +59,7 @@ function drawGameEnd() {
     if (gameOver) text = "Game Over";
 
     ctx.fillStyle = "black";
-    ctx.fillRect(0, canvas.height / 3.2, canvas.width, 80);
+    ctx.fillRect(0, canvas.height / 3.2, canvas.width, 120);
 
     ctx.font = "115px 'Press Start 2P'";
     const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
@@ -68,17 +68,25 @@ function drawGameEnd() {
     gradient.addColorStop("0.9", "white");
 
     ctx.fillStyle = gradient;
-
-    // Calculate the width of the text
     const textWidth = ctx.measureText(text).width;
-    // Calculate the horizontal center position
-    const centerX = canvas.width / 2;
-    // Calculate the x-coordinate to center the text
-    const xPosition = centerX - (textWidth / 2);
-
+    const xPosition = canvas.width / 2 - textWidth / 2;
     ctx.fillText(text, xPosition, canvas.height / 2);
+
+    // Add restart instructions
+    ctx.font = "25px 'Press Start 2P'";
+    ctx.fillStyle = "white";
+    const restartText = "Press R to Restart";
+    const restartWidth = ctx.measureText(restartText).width;
+    ctx.fillText(restartText, canvas.width / 2 - restartWidth / 2, canvas.height / 2 + 50);
   }
 }
 
+
 tileMap.setCanvasSize(canvas);
 setInterval(gameLoop, 1000 / 75);
+
+document.addEventListener("keydown", (event) => {
+  if ((gameOver || gameWin) && (event.key === "r" || event.key === "R")) {
+    location.reload();
+  }
+});
