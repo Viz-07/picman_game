@@ -1,90 +1,647 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Pic-Man Intro</title>
-  <style>
-    body {
-      margin: 0;
-      background-color: black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: 'Press Start 2P', cursive;
-      cursor: pointer;
-    }
-    .container {
-      position: relative;
-      width: max-content;
-    }
-    .poster {
-      max-width: 500px;
-      width: 90%;
-      display: block;
-    }
-    .start-btn {
-      position: absolute;
-      left: 47%;
-      top: 85%;
-      transform: translate(-50%, -50%);
-      background: yellow;
-      white-space: nowrap;
-      color: black;
-      font-family: 'Press Start 2P', cursive;
-      border: none;
-      padding: 25px 50px;
-      font-size: 21px;
-      border-radius: 12px;
-      cursor: pointer;
-      box-shadow: 0 0 20px yellow;
-      transition: transform 0.2s ease;
-    }
-    .start-btn:hover {
-      transform: translate(-50%, -50%) scale(1.1);
-    }
-  </style>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pac-Man Intro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-  <!-- Background Music -->
-  <audio id="bgMusic" loop autoplay>
-    <source src="sounds/gameWin.wav" type="audio/wav">
-    Your browser does not support the audio element.
-  </audio>
+      html, body {
+        height: 100%;
+        background: black;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        /* background-color: aqua; */
+      }
 
-  <div class="container">
-    <img src="images/poster.gif" alt="Pic-Man Poster" class="poster"> 
-    <button class="start-btn" onclick="startGame()">START GAME</button>
-  </div>
+      /* Ghost Border Animations */
+      @keyframes tilt-left {
+          0%   { transform: rotate(0deg); opacity: 0.8; }
+          50%  { transform: rotate(-10deg); opacity: 0.6; }
+          100% { transform: rotate(0deg); opacity: 0.7; }
+      }
 
-  <script>
-    const music = document.getElementById("bgMusic");
-    music.volume = 0.5;
+      @keyframes tilt-right {
+          0%   { transform: rotate(0deg); opacity: 0.8; }
+          50%  { transform: rotate(10deg); opacity: 0.6; }
+          100% { transform: rotate(0deg); opacity: 0.7; }
+      }
+
+      .tilt-left {
+        animation: tilt-left 1s ease-in-out infinite;
+      }
+
+      .tilt-right {
+        animation: tilt-right 1s ease-in-out infinite;
+      }
+
+      /* Top Animations */
+      .side-image {
+        position: absolute;
+        top: 30px;
+        width: 70px;
+        height: 180px;
+        z-index: 3;
+        right: 40px;
+      }
+
+      .dot-row {
+        position: relative;
+        width: 80%;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 3;
+        pointer-events: none;
+      }
+      .orange-dot {
+        background-color: #ffa600cb;
+        box-shadow: 0 0 15px 7px rgb(64, 43, 249), 0 0 2px 2px rgb(255, 225, 53) inset;
+        border-radius: 33%;
+        animation: float 4s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%, 100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(+50px);
+        }
+      }
+
+      /* Vortex Animation */
+      .vortex {
+        position: absolute;
+        width: 150px;
+        top: 30%;
+        transform: translateX(-50%);
+        z-index: 5;
+      }
+      .vortex-left {
+        left: 100px;
+        transform: translateX(-50%) rotateY(180deg);
+      }
+      .vortex-right {
+        right: -50px;
+        transform: translateX(-50%);
+      }
+
+      /* Chase Section */
+      .chase-area {
+        position: relative;
+        width: 100vw;
+        height: 150px;
+        margin-top: 60px;
+        overflow: hidden;
+        z-index: 5;
+      }
+
+      .ghost {
+        position: absolute;
+        top: 57%;
+        transform: translateY(-50%);
+      }
+
+      .leadGhost {
+        width: 55px;
+        height: 55px;
+        animation: 
+          leadGhost 4s linear infinite,
+          wiggle 0.5s ease-in-out infinite;
+      }
+
+      .followGhost {
+        width: 70px;
+        height: 70px;
+        animation: 
+          followGhost 4s linear infinite,
+          wiggle 0.5s ease-in-out infinite;
+      }
+
+      @keyframes leadGhost {
+        0%  { left: 6vw; opacity: 0.2; }
+        10% { opacity: 0.9; }
+        99% { opacity: 0.9; }
+        100% { left: 91vw; opacity: 0.2; }
+      }
+
+      @keyframes followGhost {
+        0%  { left: 5vw; opacity: 0.3; }
+        10% { opacity: 0.9; }
+        40%  { left: 35vw; }
+        75%  { left: 65vw; }
+        99% { opacity: 0.9; }
+        100% { left: 90vw; opacity: 0.2; }
+      }
+      
+      @keyframes wiggle {
+        0%, 100% { rotate: 0deg; }
+        25% { rotate: 6deg; }
+        50% { rotate: 0deg; }
+        75% { rotate: -6deg; }
+      }
+
+      /* Logo Animations*/
+      .logo {
+        position: absolute;
+        top: 370px;
+        width: 400px;
+        z-index: 5;
+      }
+
+      .pellet-container {
+        position: absolute;
+        top: 440px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+        z-index: 6;
+      }
+
+      .pellet-container.left {
+        right: 250px;
+      }
+
+      .pellet-container.right {
+        left: 250px;
+      }
+
+      .pellets{
+        width: 70px;
+        animation: bounceGlow 3s ease-in-out infinite;
+      }
+
+      .pellet, .power-pellet {
+        width: 35px;
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes bounceGlow {
+        0%, 100% {
+          transform: translateY(0) scale(1);
+          filter: brightness(1);
+        }
+        50% {
+          transform: translateY(-12px) scale(1.1);
+          filter: brightness(1.4);
+        }
+      }
+
+      /* Video Animations */
+      .ghost-video {
+        position: absolute;
+        width: 240px;
+        height: auto;
+        top: 50%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      /* Bottom Pulse Animations */
+      .pulse-row {
+        position: absolute;
+        bottom: 40px;
+        width: 80%;
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        z-index: 5;
+      }
+
+      .pulse {
+        width: 80px;
+        height: auto;
+        animation: pulseFade 4s ease-in-out infinite;
+        opacity: 0.5;
+      }
+
+      @keyframes pulseFade {
+        0%, 100% {
+          opacity: 0.3;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.08);
+        }
+      }
+
+      /* Individual Components*/
+      #muteButton {
+        position: absolute;
+        top: 50px;
+        left: 50px;
+        z-index: 99;
+        cursor: pointer;
+        width: 70px;
+        height: 70px;
+      }
+
+      .piggy {
+        position: absolute;
+        bottom: 50px;
+        left: 40px;
+        width: 120px;
+        cursor: pointer;
+        z-index: 3;
+      }
+
+      .coin {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        background: url('images/coin.png') no-repeat center center / contain;
+        pointer-events: none;
+        z-index: 6;
+        display: none;
+        transform-origin: center center;
+        transform-style: preserve-3d;
+        will-change: transform, opacity;
+      }
+
+      @keyframes coinJumpArc {
+        0%   { transform: translate(0px,   0px)     rotateY(0deg); opacity: 1; }
+        5%   { transform: translate(62px,  -57px)   rotateY(270deg); }
+        10%  { transform: translate(125px, -108px)  rotateY(540deg); }
+        15%  { transform: translate(187px, -153px)  rotateY(810deg); }
+        20%  { transform: translate(250px, -192px)  rotateY(1080deg); }
+        25%  { transform: translate(312px, -225px)  rotateY(1350deg); }
+        30%  { transform: translate(375px, -252px)  rotateY(1620deg); }
+        35%  { transform: translate(437px, -273px)  rotateY(1890deg); }
+        40%  { transform: translate(500px, -288px)  rotateY(2160deg); }
+        45%  { transform: translate(562px, -297px)  rotateY(2430deg); }
+        50%  { transform: translate(625px, -300px)  rotateY(2700deg); }
+        55%  { transform: translate(687px, -297px)  rotateY(2970deg); }
+        60%  { transform: translate(750px, -288px)  rotateY(3240deg); }
+        65%  { transform: translate(812px, -273px)  rotateY(3510deg); }
+        70%  { transform: translate(875px, -252px)  rotateY(3780deg); }
+        75%  { transform: translate(937px, -225px)  rotateY(4050deg); }
+        80%  { transform: translate(1000px,-192px)  rotateY(4320deg); }
+        85%  { transform: translate(1062px,-153px)  rotateY(4590deg); }
+        90%  { transform: translate(1125px,-108px)  rotateY(4860deg); }
+        95%  { transform: translate(1187px,-57px)   rotateY(5130deg); opacity: 0.4; }
+        100% { transform: translate(1270px,-23px)    rotateY(5400deg); opacity: 0; }
+      }
+
+      .insertCoin {
+        position: absolute;
+        left: 85%;
+        bottom: 10px;
+        width: 180px;
+        z-index: 3;
+      }
+
+      @keyframes shake {
+        0%, 100% { transform: translate(0, 0) rotate(0); }
+        20% { transform: translate(-3px, 2px) rotate(-3deg); }
+        40% { transform: translate(3px, -2px) rotate(3deg); }
+        60% { transform: translate(-3px, 2px) rotate(-2deg); }
+        80% { transform: translate(3px, 0px) rotate(2deg); }
+      }
+
+      .shake {
+        animation: shake 0.6s ease-in-out;
+      }
+
+      .toggle-button {
+        position: absolute;
+        bottom: 50px;
+        right: 19%;
+        width: 180px;
+        height: auto;
+        cursor: pointer;
+        z-index: 100;
+        transition: transform 0.2s;
+      }
+
+      .toggle-button:active {
+        transform: scale(0.95);
+      }
+
+      .help-button {
+        position: fixed;
+        bottom: 60px;
+        left: 280px;
+        width: 50px;
+        height: 50px;
+        font-size: 26px;
+        font-weight: bold;
+        border-radius: 50%;
+        border: none;
+        background: #ffcc00;
+        color: black;
+        cursor: pointer;
+        z-index: 99;
+        box-shadow: 0 0 10px #ffcc00;
+        transition: transform 0.4s;
+      }
+
+      .help-button:hover {
+        transform: scale(1.5);
+      }
+
+      /* Modal */
+      .help-modal {
+        display: none;
+        position: fixed;
+        z-index: 999;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(3px);
+      }
+
+      .help-content {
+        background-color: #111;
+        color: #fff;
+        margin: 10% auto;
+        padding: 50px;
+        border: 3px solid #ffcc00;
+        width: 50%;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 14px;
+        text-align: left;
+        border-radius: 10px;
+        box-shadow: 0 0 25px #2200ff;
+      }
+
+      .help-content ul {
+        list-style-type: none;
+        padding-left: 0;
+      }
+
+      .help-content li {
+        margin: 25px 0;
+      }
+
+      .close-btn {
+        float: right;
+        font-size: 22px;
+        cursor: pointer;
+        color: #ffcc00;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Mute Button and Audio -->
+    <img id="muteButton" src="images/unmute.png" alt="Mute" />
+    <audio id="bgMusic" loop autoplay>
+      <source src="sounds/gameWin.wav" type="audio/wav">
+    </audio>
+    <!-- Top Side Panel -->
+    <img class="side-image" src="images/side.png" alt="Right Side Panel" />
+    <div class="dot-row">
+      <div class="orange-dot" style="width: 18px; height: 18px; margin-top: 0px; animation-delay: 0s;"></div>
+      <div class="orange-dot" style="width: 33px; height: 33px; margin-top: 56px; animation-delay: 0.8s;"></div>
+      <div class="orange-dot" style="width: 28px; height: 28px; margin-top: 13px; animation-delay: 0.5s;"></div>
+      <div class="orange-dot" style="width: 20px; height: 20px; margin-top: 140px; animation-delay: 0.3s;"></div>
+      <div class="orange-dot" style="width: 19px; height: 19px; margin-top: 111px; animation-delay: 0.2s;"></div>
+      <div class="orange-dot" style="width: 12px; height: 12px; margin-top: 83px; animation-delay: 0.1s;"></div>
+      <div class="orange-dot" style="width: 29px; height: 29px; margin-top: 34px; animation-delay: 0.4s;"></div>
+      <div class="orange-dot" style="width: 31px; height: 31px; margin-top: 77px; animation-delay: 0.7s;"></div>
+      <div class="orange-dot" style="width: 35px; height: 35px; margin-top: 113px; animation-delay: 0.9s;"></div>
+    </div>
+
+    <!-- Chasing Ghosts -->
+    <img class="vortex vortex-left" src="images/vortex.gif" alt="left vortex" />
+    <img class="vortex vortex-right" src="images/vortex.gif" alt="right vortex" />
+    <div class="chase-area">
+      <img src="images/leadGhost.png" class="ghost leadGhost" alt="Red Ghost" />
+      <img src="images/followGhost.png" class="ghost followGhost" alt="Blue Ghost" />
+    </div>
+
+    <!-- Pellets beside the logo -->
+    <img class="logo" src="images/logo.png" alt="Pacman Logo" />
     
-    function initAudio() {
-      const playPromise = music.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.log("Autoplay prevented - waiting for user interaction");
+    <div class="pellet-container left">
+      <img src="images/pellets.png" class="pellets" />
+      <img src="images/pellet.png" class="pellet" style="animation-delay: 0.6s"/>
+      <img src="images/pellet.png" class="pellet" style="animation-delay: 0.4s"/>
+      <img src="images/power-pellet.png" class="power-pellet" style="animation-delay: 0.2s"/>
+      <img src="images/power-pellet.png" class="power-pellet" style="animation-delay: 0s"/>
+    </div>
+
+    <div class="pellet-container right">
+      <img src="images/power-pellet.png" class="power-pellet" style="animation-delay: 0s"/>
+      <img src="images/power-pellet.png" class="power-pellet" style="animation-delay: 0.2s"/>
+      <img src="images/pellet.png" class="pellet" style="animation-delay: 0.4s"/>
+      <img src="images/pellet.png" class="pellet" style="animation-delay: 0.6s"/>
+      <img src="images/pellets.png" class="pellets" />
+    </div>
+
+    <!-- Spinning ghosts -->
+    <video class="ghost-video bottom-left" src="videos/ghost-loop.mp4" style="left: -15px;" autoplay muted loop playsinline></video>
+    <video class="ghost-video bottom-right" src="videos/ghost-loop.mp4" style="right: -15px;" autoplay muted loop playsinline></video>
+
+    <!-- Picman Pulse Row -->
+    <div class="pulse-row">
+      <img src="images/picman.png" class="pulse" style="animation-delay: 0.2s;" />
+      <img src="images/pink.png" class="pulse" style="animation-delay: 0.4s;" />
+      <img src="images/red.png" class="pulse" style="animation-delay: 0.6s;" />
+      <img src="images/blue.png" class="pulse" style="animation-delay: 0.8s;" />
+    </div>
+
+    <!-- Piggy and Coin -->
+    <img src="images/piggybank.png" class="piggy" id="piggy" alt="Piggy Bank">
+    <div class="coin" id="coin"></div>
+
+    <!-- Insert Coin Target -->
+    <img src="images/insertCoin.png" class="insertCoin" id="insertCoin" alt="Insert Coin" >
+
+    <!-- Toggle Button -->
+    <img src="images/off.png" id="toggleBtn" class="toggle-button" alt="Toggle" >
+    
+    <!-- Help Button -->
+    <button id="helpBtn" class="help-button">?</button>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="help-modal">
+      <div class="help-content">
+        <span id="closeHelp" class="close-btn">&times;</span>
+        <h2 style="color: #ffcc00;">Game Controls</h2>
+        <ul>
+          <li><strong>P</strong> - Pause the game</li>
+          <li><strong>M</strong> - Mute / Unmute sound</li>
+          <li><strong>R</strong> - Restart (after Game Over)</li>
+          <li><strong>Arrow Keys / W A S D</strong> - Move Pac-Man</li>
+          <li><strong>Tap Piggy</strong> - Start the game</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      // Ghost Edge Borders
+      function createGhostEdges() {
+        document.querySelectorAll(".ghost-edge").forEach(e => e.remove());
+
+        const edges = ["top", "bottom", "left", "right"];
+        const skipCorners = true;
+        const ghostSize = 18;
+        const gap = 4;
+        const offset = 8;
+
+        edges.forEach((edge) => {
+          const container = document.createElement("div");
+          container.classList.add("ghost-edge", edge);
+          container.style.position = "absolute";
+          container.style.display = "flex";
+          container.style.justifyContent = "center";
+          container.style.alignItems = "center";
+          container.style.pointerEvents = "none";
+          container.style.zIndex = "2";
+
+          const isHorizontal = edge === "top" || edge === "bottom";
+          const animationClass = `move-${edge}`;
+
+          if (isHorizontal) {
+            container.style.flexDirection = "row";
+            container.style.width = `calc(100% - ${offset * 2}px)`;
+            container.style.height = `${ghostSize}px`;
+            container.style[edge] = `${offset}px`;
+            container.style.left = `${offset}px`;
+            container.style.gap = `${gap}px`;
+
+            const count = Math.floor(window.innerWidth / (ghostSize + gap));
+            for (let i = 0; i < count; i++) {
+              if (skipCorners && (i === 0 || i === count - 1)) continue;
+              const img = document.createElement("img");
+              img.src = "images/grey.png";
+              img.style.width = `${ghostSize}px`;
+              img.style.height = `${ghostSize}px`;
+              img.classList.add(i % 2 === 0 ? "tilt-left" : "tilt-right");
+              container.appendChild(img);
+            }
+          } else {
+            container.style.flexDirection = "column";
+            container.style.height = `calc(100% - ${offset * 2}px)`;
+            container.style.width = `${ghostSize}px`;
+            container.style[edge] = `${offset}px`;
+            container.style.top = `${offset}px`;
+            container.style.gap = `${gap}px`;
+
+            const count = Math.floor(window.innerHeight / (ghostSize + gap));
+            for (let i = 0; i < count; i++) {
+              if (skipCorners && (i === 0 || i === count - 1)) continue;
+              const img = document.createElement("img");
+              img.src = "images/grey.png";
+              img.style.width = `${ghostSize}px`;
+              img.style.height = `${ghostSize}px`;
+              img.classList.add(i % 2 === 0 ? "tilt-left" : "tilt-right");
+              container.appendChild(img);
+            }
+          }
+          document.body.appendChild(container);
         });
       }
-    }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(initAudio, 300);
-    });
+      window.onload = createGhostEdges;
+      window.addEventListener("resize", createGhostEdges);
 
-    document.addEventListener('click', () => {
-      initAudio();
-    }, { once: true });
+      // Mute Button and Audio
+      const music = document.getElementById("bgMusic");
+      const muteButton = document.getElementById("muteButton");
+      const piggy = document.getElementById("piggy");
+      const coin = document.getElementById("coin");
 
-    function startGame() {
-      localStorage.setItem('musicTime', music.currentTime);
-      window.location.href = "game.html";
-    }
-  </script>
+      window.isMuted = localStorage.getItem("isMuted") === "true";
+      music.volume = 0.5;
+      music.muted = window.isMuted;
+      muteButton.src = window.isMuted ? "images/mute.png" : "images/unmute.png";
 
-</body>
+      muteButton.addEventListener("click", toggleMute);
+      document.addEventListener("keydown", (e) => {
+        if (e.key.toLowerCase() === "m") toggleMute();
+      });
+
+      function toggleMute() {
+        window.isMuted = !window.isMuted;
+        localStorage.setItem("isMuted", window.isMuted);
+        muteButton.src = window.isMuted ? "images/mute.png" : "images/unmute.png";
+        music.muted = window.isMuted;
+      }
+
+      function initAudio() {
+        music.play().catch(() => {
+          console.log("Autoplay blocked");
+        });
+      }
+      document.addEventListener('DOMContentLoaded', () => setTimeout(initAudio, 300)); // Waits for page(DOM) to load, then waits 300ms before trying to calling initAudio(bg music).
+      document.addEventListener('click', initAudio, { once: true }); // triggers as soon as the user clicks
+
+      function startGame() {
+        localStorage.setItem("musicTime", music.currentTime);
+        window.location.href = "game.html";
+      }
+      
+      piggy.addEventListener("click", () => {
+        const coin = document.getElementById("coin");
+        const piggyRect = piggy.getBoundingClientRect();
+        const insertCoin = document.querySelector(".insertCoin");
+
+        coin.style.display = "block";
+        coin.style.left = piggy.offsetLeft + 30 + "px";
+        coin.style.top = piggy.offsetTop + "px";
+        coin.style.animation = "coinJumpArc 2.5s ease-in-out forwards";
+
+        // Wait for coin arc to complete
+        setTimeout(() => {
+          coin.style.display = "none";
+          coin.style.animation = "";
+
+          // Start shake effect
+          insertCoin.classList.add("shake");
+
+          // Swap image after shake
+          setTimeout(() => {
+            insertCoin.src = "images/insertCoin2.png";
+          }, 600); // match shake duration
+
+          // Navigate to game
+          setTimeout(() => {
+            window.location.href = "game.html";
+          }, 1400);
+        }, 2500); // same duration as coinJumpArc
+      });
+      
+      const toggleBtn = document.getElementById("toggleBtn");
+      let toggleState = false;
+
+      toggleBtn.addEventListener("click", () => {
+        toggleState = !toggleState;
+        toggleBtn.src = toggleState ? "images/on.png" : "images/off.png";
+
+        // Optional: Do something when toggled on/off
+        console.log(toggleState ? "Sound ON" : "Sound OFF");
+      });
+
+      const helpBtn = document.getElementById("helpBtn");
+      const helpModal = document.getElementById("helpModal");
+      const closeHelp = document.getElementById("closeHelp");
+
+      helpBtn.addEventListener("click", () => {
+        helpModal.style.display = "block";
+      });
+
+      closeHelp.addEventListener("click", () => {
+        helpModal.style.display = "none";
+      });
+
+      window.addEventListener("click", (e) => {
+        if (e.target === helpModal) helpModal.style.display = "none";
+      });
+    </script>
+  </body>
 </html>

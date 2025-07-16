@@ -20,9 +20,13 @@ export default class Pacman {
     this.powerDotSound = new Audio("sounds/power_dot.wav");
     this.powerDotActive = false;
     this.powerDotAboutToExpire = false;
-    this.timers = [];
+
+    this.powerDotEndTime = null;
+    this.powerDotWarningTime = null;
+    this.ghostRespawns = [];
 
     this.eatGhostSound = new Audio("sounds/eat_ghost.wav");
+    this.respawnSound = new Audio("sounds/respawn.wav");
 
     this.madeFirstMove = false;
 
@@ -38,14 +42,15 @@ export default class Pacman {
     up: 3,
   };
 
-  draw(ctx, pause, enemies) {
-    if (!pause) {
+  draw(ctx, pause, enemies, gameTime) {
+    const paused = pause();
+    if (!paused) {
       this.#move();
       this.#animate();
     }
     this.#eatDot();
-    this.#eatPowerDot();
-    this.#eatGhost(enemies);
+    this.#eatPowerDot(gameTime);
+    this.#eatGhost(enemies, gameTime);
 
     const size = this.tileSize / 2;
 
@@ -59,85 +64,80 @@ export default class Pacman {
       this.tileSize,
       this.tileSize
     );
-
     ctx.restore();
 
-    // ctx.drawImage(
-    //   this.pacmanImages[this.pacmanImageIndex],
-    //   this.x,
-    //   this.y,
-    //   this.tileSize,
-    //   this.tileSize
-    // );
-    
+    // Handle power dot timing
+    if (!paused && this.powerDotActive) {
+      const now = gameTime.now;
+      if (now >= this.powerDotEndTime) {
+        this.powerDotActive = false;
+        this.powerDotAboutToExpire = false;
+      } else if (now >= this.powerDotWarningTime) {
+        this.powerDotAboutToExpire = true;
+      }
+    }
+
+    // Handle queued ghost respawns
+    if (!paused) {
+      const now = gameTime.now;
+      this.ghostRespawns = this.ghostRespawns.filter(data => {
+        if (now >= data.schedule) {
+          const newEnemy = new data.constructor(
+            data.spawn.x,
+            data.spawn.y,
+            this.tileSize,
+            data.velocity,
+            this.tileMap,
+            data.spawn.name
+          );
+          newEnemy.fadingIn = true;
+          newEnemy.respawnAlpha = 0;
+          enemies.push(newEnemy);
+          if (!window.isMuted) this.respawnSound.play();
+          return false;
+        }
+        return true;
+      });
+    }
   }
 
   #loadPacmanImages() {
-    const pacmanImage0 = new Image();
-    pacmanImage0.src = "images/pacman_frame_0.png";
-
-    const pacmanImage1 = new Image();
-    pacmanImage1.src = "images/pacman_frame_1.png";
-
-    const pacmanImage2 = new Image();
-    pacmanImage2.src = "images/pacman_frame_2.png";
-
-    const pacmanImage3 = new Image();
-    pacmanImage3.src = "images/pacman_frame_3.png";
-
-    const pacmanImage4 = new Image();
-    pacmanImage4.src = "images/pacman_frame_4.png";
-
-    const pacmanImage5 = new Image();
-    pacmanImage5.src = "images/pacman_frame_5.png";
-
-    const pacmanImage6 = new Image();
-    pacmanImage6.src = "images/pacman_frame_6.png";
-
-    const pacmanImage7 = new Image();
-    pacmanImage7.src = "images/pacman_frame_7.png";
+    const load = name => {
+      const img = new Image();
+      img.src = `images/${name}`;
+      return img;
+    };
 
     this.pacmanImages = [
-      pacmanImage0,
-      pacmanImage1,
-      pacmanImage2,
-      pacmanImage3,
-      pacmanImage4,
-      pacmanImage5,
-      pacmanImage6,
-      pacmanImage7,
+      load("pacman_frame_0.png"),
+      load("pacman_frame_1.png"),
+      load("pacman_frame_2.png"),
+      load("pacman_frame_3.png"),
+      load("pacman_frame_4.png"),
+      load("pacman_frame_5.png"),
+      load("pacman_frame_6.png"),
     ];
     this.pacmanImageIndex = 0;
   }
 
   #keydown = (event) => {
-    //up
-    if (event.keyCode == 38) {
-      if (this.currentMovingDirection == MovingDirection.down)
-        this.currentMovingDirection = MovingDirection.up;
-      this.requestedMovingDirection = MovingDirection.up;
-      this.madeFirstMove = true;
-    }
-    //down
-    if (event.keyCode == 40) {
-      if (this.currentMovingDirection == MovingDirection.up)
-        this.currentMovingDirection = MovingDirection.down;
-      this.requestedMovingDirection = MovingDirection.down;
-      this.madeFirstMove = true;
-    }
-    //left
-    if (event.keyCode == 37) {
-      if (this.currentMovingDirection == MovingDirection.right)
-        this.currentMovingDirection = MovingDirection.left;
-      this.requestedMovingDirection = MovingDirection.left;
-      this.madeFirstMove = true;
-    }
-    //right
-    if (event.keyCode == 39) {
-      if (this.currentMovingDirection == MovingDirection.left)
-        this.currentMovingDirection = MovingDirection.right;
-      this.requestedMovingDirection = MovingDirection.right;
-      this.madeFirstMove = true;
+    switch (event.keyCode) {
+      case 38:
+        this.requestedMovingDirection = MovingDirection.up;
+        this.madeFirstMove = true;
+        break;
+      case 40:
+        this.requestedMovingDirection = MovingDirection.down;
+        this.madeFirstMove = true;
+        break;
+      case 37:
+        this.requestedMovingDirection = MovingDirection.left;
+        this.madeFirstMove = true;
+        break;
+      case 39:
+        this.requestedMovingDirection = MovingDirection.right;
+        this.madeFirstMove = true;
+        break;
     }
   };
 
@@ -153,8 +153,9 @@ export default class Pacman {
             this.y,
             this.requestedMovingDirection
           )
-        )
+        ) {
           this.currentMovingDirection = this.requestedMovingDirection;
+        }
       }
     }
 
@@ -169,8 +170,8 @@ export default class Pacman {
       this.pacmanImageIndex = 1;
       return;
     } else if (
-      this.currentMovingDirection != null &&
-      this.pacmanAnimationTimer == null
+      this.currentMovingDirection !== null &&
+      this.pacmanAnimationTimer === null
     ) {
       this.pacmanAnimationTimer = this.pacmanAnimationTimerDefault;
     }
@@ -193,57 +194,74 @@ export default class Pacman {
         this.pacmanRotation = this.Rotation.right;
         break;
     }
+    
+    const col = Math.floor(this.x / this.tileSize);
+    const row = Math.floor(this.y / this.tileSize);
+
+    if (this.tileMap.map[row][col] === 2) {
+      // If Pacman is at left wormhole (tile 2)
+      if (col === 0 || col === 1 || col === 2) {
+        // Teleport to right side wormhole (tile 2 on far right)
+        this.x = (this.tileMap.map[0].length - 2) * this.tileSize; // Adjust offset to avoid wall overlap
+      } 
+      // If Pacman is at right wormhole
+      else if (col >= this.tileMap.map[0].length - 3) {
+        this.x = 1 * this.tileSize; // Teleport to left side
+      }
+    }
   }
 
   #animate() {
-    if (this.pacmanAnimationTimer == null) {
-      return;
-    }
+    if (this.pacmanAnimationTimer === null) return;
+
     this.pacmanAnimationTimer--;
-    if (this.pacmanAnimationTimer == 0) {
+    if (this.pacmanAnimationTimer === 0) {
       this.pacmanAnimationTimer = this.pacmanAnimationTimerDefault;
-      this.pacmanImageIndex++;
-      if (this.pacmanImageIndex == this.pacmanImages.length)
-        this.pacmanImageIndex = 0;
+      this.pacmanImageIndex = (this.pacmanImageIndex + 1) % this.pacmanImages.length;
     }
   }
 
   #eatDot() {
     if (this.tileMap.eatDot(this.x, this.y) && this.madeFirstMove) {
-      this.wakaSound.volume = 0.8;
-      this.wakaSound.play();
+      if (!window.isMuted) {
+        this.wakaSound.volume = 0.8;
+        this.wakaSound.play();
+      }
+      window.score += 10;
     }
   }
 
-  #eatPowerDot() {
+  #eatPowerDot(gameTime) {
     if (this.tileMap.eatPowerDot(this.x, this.y)) {
-      this.powerDotSound.play();
+      if (!window.isMuted) this.powerDotSound.play();
       this.powerDotActive = true;
       this.powerDotAboutToExpire = false;
-      this.timers.forEach((timer) => clearTimeout(timer));
-      this.timers = [];
+      window.score += 50;
 
-      let powerDotTimer = setTimeout(() => {
-        this.powerDotActive = false;
-        this.powerDotAboutToExpire = false;
-      }, 1000 * 6);
-
-      this.timers.push(powerDotTimer);
-
-      let powerDotAboutToExpireTimer = setTimeout(() => {
-        this.powerDotAboutToExpire = true;
-      }, 1000 * 3);
-
-      this.timers.push(powerDotAboutToExpireTimer);
+      const now = gameTime.now;
+      this.powerDotEndTime = now + 6000; // 6 seconds active
+      this.powerDotWarningTime = now + 4000; // 4 seconds warning
     }
   }
 
-  #eatGhost(enemies) {
+  #eatGhost(enemies, gameTime) {
     if (this.powerDotActive) {
-      const collideEnemies = enemies.filter((enemy) => enemy.collideWith(this));
-      collideEnemies.forEach((enemy) => {
+      const now = gameTime.now;
+      const collideEnemies = enemies.filter(enemy => enemy.collideWith(this));
+      collideEnemies.forEach(enemy => {
         enemies.splice(enemies.indexOf(enemy), 1);
-        this.eatGhostSound.play();
+        if (!window.isMuted) this.eatGhostSound.play();
+        window.score += 100;
+
+        const spawn = this.tileMap.enemySpawnPoints.find(e => e.name === enemy.color);
+        if (spawn) {
+          this.ghostRespawns.push({
+            spawn,
+            constructor: enemy.constructor,
+            velocity: enemy.velocity,
+            schedule: now + 4000 + Math.random() * 2000
+          });
+        }
       });
     }
   }
